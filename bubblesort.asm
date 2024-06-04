@@ -9,6 +9,7 @@
 ARRAY		.BLKW 8					;Array to hold input numbers
 PROMPT		.STRINGZ "Enter 8 numbers (0-100): "
 OUTPUT_MSG	.STRINGZ "Sorted numbers: "
+NEWLINE       .FILL x000A              ; Newline character
 
 ; Main Program
 START
@@ -42,15 +43,24 @@ GET_NUM
 	AND R0, R0, #0			;CLEAR R0
 	AND R1, R1, #0			;CLEAR R1
 	AND R2, R2, #0			;CLEAR R2 (COUNTER)
+	LD R3, ZERO_ASCII          ; Load ASCII '0'
 
 READ_DIGIT
-	GETC                       ; Get a character from keyboard
+        GETC                       ; Get a character from keyboard
         OUT                        ; Echo the character
-        LD R1, ASCII_OFFSET        ; Load ASCII offset
-        ADD R0, R0, R1             ; Convert ASCII to integer
-	BRz DONE_READING	   ;IF INPUT IS ENTER, END INPUT
-	ADD R2, R2, #1		   ;INCREMENT DIGIT COUNTER
-        BRnzp READ_DIGIT	   ;READ NEXT DIGIT
+        ADD R0, R0, R3             ; Convert ASCII to integer
+        BRz DONE_READING           ; If input is enter, end input
+        ADD R0, R0, R3             ; Convert ASCII to integer
+        
+        ; Multiply current number by 10 using shifts and additions
+        ADD R1, R1, R1             ; R1 = R1 * 2
+        ADD R1, R1, R1             ; R1 = R1 * 4
+        ADD R1, R1, R1             ; R1 = R1 * 8
+        ADD R1, R1, R1             ; R1 = R1 * 16
+        ADD R1, R1, R0             ; R1 = R1 + R0 (form the complete number)
+
+        ADD R2, R2, #1             ; Increment digit counter
+        BRnzp READ_DIGIT           ; Read next digit
 
 DONE_READING
 	JSR CHECK_VALUE            ; Validate the number
@@ -59,10 +69,11 @@ DONE_READING
 ;Subroutine: Check value (validate input)
 CHECK_VALUE
 	BRn GET_NUM_AGAIN          ; If input is negative, get input again
-        LD R1, MAX_VALUE	;CHECK IF NUMBER IS LESS THAN OR EQUAL TO 100
-        NOT R1, R1
-        ADD R1, R1, R0
-        BRzp GET_NUM_AGAIN         ; If input is greater than 100, get input again
+        ; Check if number is less than or equal to 100
+        LD R4, MAX_VALUE
+        NOT R4, R4
+        ADD R4, R4, R1
+        BRzp GET_NUM_AGAIN         ; If number is greater than 100, get input again
         RET
 
 GET_NUM_AGAIN
@@ -118,20 +129,38 @@ DISPLAY_NUMBERS
 DISPLAY_LOOP
         LDR R0, R1, #0             ; Load number from array
         JSR PRINT_NUM              ; Print the number
+        LD R4, NEWLINE
+        ADD R0, R4, #0             ; Add newline after each number
+        OUT
         ADD R1, R1, #1             ; Move to the next array element
         ADD R3, R3, #1             ; Increment the counter
         NOT R4, R2
         ADD R4, R4, R3
         BRnp DISPLAY_LOOP          ; Repeat until all numbers are printed
         RET
-
 ;Subroutine: Print number
 PRINT_NUM
-        LD R1, ASCII_OFFSET        ; Load ASCII offset
-        ADD R0, R0, R1             ; Convert to ASCII
-        OUT                        ; Output character to console
-        RET
+        AND R2, R2, #0             ; Clear R2
+        ADD R2, R0, #0             ; Copy number to R2
+        LD R3, ZERO_ASCII          ; Load ASCII '0'
 
+PRINT_LOOP
+        ; Get the last digit by taking mod 10
+        AND R4, R2, #0             ; Clear R4
+        ADD R4, R2, #0             ; Copy number to R4
+        ADD R4, R4, #-10           ; Subtract 10
+        BRn STORE_DIGIT            ; If less than 10, store digit
+
+        ADD R4, R4, #10            ; Add back 10 to get the correct digit
+        AND R5, R5, #0             ; Clear R5
+        ADD R5, R5, #1             ; R5 = 1 (indicate there's another digit)
+
+STORE_DIGIT
+        ADD R4, R4, R3             ; Convert to ASCII
+        STR R4, R6, #-1            ; Store digit in stack (R6)
+        ADD R6, R6, #-1            ; Decrement stack pointer
+        ADD R2, R2, #-10           ; Remove the last digit
+        BRnz PRINT_LOOP            ; Repeat if there are more digits
 
 ;Data
 NUM_EIGHT    .FILL 8               ; Constant value 8
