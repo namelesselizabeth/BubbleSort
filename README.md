@@ -4,8 +4,8 @@
  To run this project, use LC-3 code editor to assembly project and run the .obj file within LC3 simulator
  ##Collaborators
  Vicoria Avila
-  ###Documentation/Code
+  Documentation/Code
  Elizabeth Grajeda
-  ###Documentation/Code
+  Documentation/Code
  Jesse Martinez
- ###Code
+  Code
