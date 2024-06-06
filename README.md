@@ -5,7 +5,7 @@
  To run this project, use LC-3 code editor to assemble project and run the .obj file within LC3 simulator
  
  ## Collaborators
- ### Vicoria Avila
+ ### Victoria Avila
   Documentation/Code
  ### Elizabeth Grajeda
   Documentation/Code
