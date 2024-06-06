@@ -31,7 +31,7 @@ PUTS						;OUTPUT STRING TO CONSOLE
 AND R0, R0, #0					;clear r0
 AND R2, R2, #0					;clear r2
 
-;user input
+;user input (two digits expected
 GETC						;GET FIRST CHARACTER
 OUT						;ECHO FIRST CHRACTER
 ADD R0, R0, R1					;sub for ascii to integer convrt (TENS PLACE)
@@ -49,7 +49,6 @@ ADD R3, R3, #1					;move to nxt array location
 ADD R5, R5, #-1					;subtact from loop count (total x8)
 BRp LOOP					;if ++ is positive cont loop
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Bubble sort implementation
 LD R6, LPCOUNT		;Outer loop counter, R6 = 8
 OUTER_LOOP
@@ -89,53 +88,55 @@ LD R6, LPCOUNT		;LOAD LOOP COUNT INTO R6
 PRINT_LOOP
 LDR R0, R3, #0		;LOAD ELEMENT INTO R0
 JSR PRINT_NUM		;PRINT THE NUMBER
-LEA R0, SPACE		;LOAD SPACE CHARACTER
-PUTS			;PRINT SPACE
 
 ADD R3, R3, #1		;MOVE TO NEXT ELEMENT
 ADD R6, R6, #-1		;DECREMENT LOOP COUNTER
+BRz END_PRINT_LOOP	; IF F6 == 0, END PRINT LOOP
+
+LEA R0, SPACE		;LOAD SPACE CHARACTER
+PUTS			;PRINT SPACE
 BRp PRINT_LOOP		;IF R6 > 0, CONTINUE LOOP
 
-;halt program
+END_PRINT_LOOP
 HALT						
 
 ;SUBROUTINE TO PRINT NUMBER
 PRINT_NUM
 ;SAVE REGISTERS THAT WILL BE USED
-ST R7, SAVE_R7
-ST R5, SAVE_R5
-ST R6, SAVE_R6
+ST R1, SAVE_R1
+ST R2, SAVE_R2
 
-AND R5, R5, #0		;CLEAR R5
-ADD R5, R5, R0		;COPY NUMBER TO R5
+;divide number in r0 by 10 to get tens and ones place
+AND R1, R1, #0		;CLEAR R1 (QUOTIENT)
+AND R2, R2, #0		;CLEAR R5 (REMAINDER)
+ADD R2, R2, R0		;COPY NUMBER TO R2
 
-LD R6, ASCII		;LOAD 48 (ASCII OFFSET FOR DIGITS
+
 
 ;DIV_TEN
-AND R7, R7, #0		;CLEAR R7 (quotient)
-AND R1, R1, #10		;CLEAR R1
-ADD R1, R1, #10		;R1 = 10
+LD R3, TEN		;LOAD 10 INTO R3
 
-DIV_LOOP
-NOT R2, R1		;R2=-10
-ADD R2, R2, R5		;R2 = R5 - 10
+LOOP_DIV
+NOT R4, R3		;R4 = -10
+ADD R4, R4, R2		;R4 = R2 - 10
+BRn DONE_DIV		;IF R4 < 0, DIVISION DONE
+ADD R2, R4, #0		;R2 = R4
+ADD R1, R1, #1		;INCREMENT QUOTIENT (TENS PLACE)
+BR LOOP_DIV
 
-BRn END_DIV		;IF R2 < 0, END DIVISION
-ADD R5, R2, #0		;R5 = R2
-ADD R7, R7, #1		;INCREMENT QUOTIENT (TENS PLACE)
-BR DIV_LOOP
+DONE_DIV
+LD R3, ASCII_OFFSET	;LOAD ASCII OFFSET
 
-END_DIV
-ADD R0, R7, R6		;CONVERT QUOTIENT TO ASCII
-OUT			;OUTPUT QUOTIENT
-ADD R0, R5, R6		;CONVERT REMAINDER TO ASCII
-OUT			;OUTPUT REMAINDER
-RET
+ADD R1, R1, R3		;CONVERT QUOTIENT TO ASCII
+OUT			;PRINT TENS PLACE
+ADD R2, R2, R3		;CONVERT REMAINDER TO ASCII
+OUT			;PRINT ONES PLACE
 
 ;RESTORE REGISTERS
-LD R7, SAVE_R7
-LD R5, SAVE_R5
-LD R6, SAVE_R6
+LD R1, SAVE_R1
+LD R2, SAVE_R2
+RET
+
 ;data for console output;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 PROMPT1	.STRINGZ "Hello! Please enter 8 numbers between 0-100\n"
@@ -143,17 +144,17 @@ PROMPT2	.STRINGZ "For single digits, enter zero in front. (example: 01 instead o
 LOOPMSG	.STRINGZ "Enter a number: "
 NEWLINE	.STRINGZ "\n"
 SPACE	.STRINGZ " " 
-NEWSORT	.STRINGZ "Ascending order: "	;save4later-will be used to display bubble sorted user inputs
+NEWSORT	.STRINGZ "Ascending order: "	
 
 ;data for fixed values;
 ;;;;;;;;;;;;;;;;;;;;;;;
-ASCII 	.FILL #-48		;ascii conversion
+ASCII_OFFSET 	.FILL #48		;ascii conversion
 ASIOFF	.FILL xFFD0		;offset needed for # conversion
 LPCOUNT	.FILL #8		;loop initial value set to 8
 ARRAY 	.BLKW #8		;array data set in memory
-SAVE_R7        .BLKW #1       ; Storage for R7
+TEN	.FILL #10		;CONSTANT 10 FOR DIVISION
+SAVE_R1        .BLKW #1       ; Storage for R1
 
-SAVE_R5        .BLKW #1       ; Storage for R5
+SAVE_R2        .BLKW #1       ; Storage for R2
 
-SAVE_R6        .BLKW #1       ; Storage for R6
 .END
