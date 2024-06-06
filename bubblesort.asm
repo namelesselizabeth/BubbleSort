@@ -1,171 +1,159 @@
-;Bubble Sort Program for LC-3 Assembly
-;Input : Sorts 8 user-input numbers ranging from 0-100
-;Output: Display sorted values in ascending order in console
+;CIS11
+;STUDENT NAMES: STUDENT1, STUDENT2, STUDENT3
+;GROUP PROJECT: BUBBLE SORT
+;DESCRIPTION: LC-3 PROGRAM THAT IMPLEMENTS BUBBLE SORTING ALGORITHM
+;TEST PROGRAMS WITH: 11,8,2,17,6,4,3,21
+;TEST OUTPUT SHOULD BE: 2,3,4,6,8,11,17,21
 
 .ORIG x3000
 
-;Constants and Memory Locations
-;We can always move this to the bottom? Dont have everything we might need here
-ARRAY		.BLKW 8					;Array to hold input numbers
-PROMPT		.STRINGZ "Enter 8 numbers (0-100): "
-OUTPUT_MSG	.STRINGZ "Sorted numbers: "
-NEWLINE       .FILL x000A              ; Newline character
+LEA R0, PROMPT1			;load prompt1 string
+PUTS				;output prompt1 string 2console
+LEA R0, PROMPT2			;load prompt2 string
+PUTS				;output prompt2 
+LEA R3, ARRAY			;address array
 
-; Main Program
-START
-        LEA R0, PROMPT             ; Load address of PROMPT
-        PUTS                       ; Display the prompt message
-        JSR INPUT_NUMBERS          ; Input numbers from user
-        JSR BUBBLE_SORT            ; Sort numbers
-        LEA R0, OUTPUT_MSG         ; Load address of OUTPUT_MSG
-        PUTS                       ; Display the output message
-        JSR DISPLAY_NUMBERS        ; Display sorted numbers
-        HALT                       ; Halt the program
+LD R1, ASIOFF
+LD R4, LPCOUNT			;load loop counter 2 r4
 
-;Subroutine: Input numbers
-INPUT_NUMBERS
-	LEA R1, ARRAY              ; Load base address of ARRAY
-        LD R2, NUM_EIGHT           ; Load the number 8
-        AND R3, R3, #0             ; Clear R3 (counter)
-
-INPUT_LOOP
-	JSR GET_NUM                ; Get a number from the user
-        STR R0, R1, #0             ; Store the number in the array
-        ADD R1, R1, #1             ; Move to the next array element
-        ADD R3, R3, #1             ; Increment the counter
-        NOT R4, R2
-        ADD R4, R4, R3
-        BRnp INPUT_LOOP            ; Repeat until 8 numbers are input
-        RET
-
-;Subroutine: Get a number from the user
-GET_NUM
-	AND R0, R0, #0			;CLEAR R0
-	AND R1, R1, #0			;CLEAR R1
-	AND R2, R2, #0			;CLEAR R2 (COUNTER)
-	LD R3, ZERO_ASCII          ; Load ASCII '0'
-
-READ_DIGIT
-        GETC                       ; Get a character from keyboard
-        OUT                        ; Echo the character
-        ADD R0, R0, R3             ; Convert ASCII to integer
-        BRz DONE_READING           ; If input is enter, end input
-        ADD R0, R0, R3             ; Convert ASCII to integer
-        
-        ; Multiply current number by 10 using shifts and additions
-        ADD R1, R1, R1             ; R1 = R1 * 2
-        ADD R1, R1, R1             ; R1 = R1 * 4
-        ADD R1, R1, R1             ; R1 = R1 * 8
-        ADD R1, R1, R1             ; R1 = R1 * 16
-        ADD R1, R1, R0             ; R1 = R1 + R0 (form the complete number)
-
-        ADD R2, R2, #1             ; Increment digit counter
-        BRnzp READ_DIGIT           ; Read next digit
-
-DONE_READING
-	JSR CHECK_VALUE            ; Validate the number
-	RET
-
-;Subroutine: Check value (validate input)
-CHECK_VALUE
-	BRn GET_NUM_AGAIN          ; If input is negative, get input again
-        ; Check if number is less than or equal to 100
-        LD R4, MAX_VALUE
-        NOT R4, R4
-        ADD R4, R4, R1
-        BRzp GET_NUM_AGAIN         ; If number is greater than 100, get input again
-        RET
-
-GET_NUM_AGAIN
-        JSR GET_NUM               ; READS ANOTHER NUMBER IF INVALID
-        RET
-
-;Subroutine: Bubble Sort
-BUBBLE_SORT
-        LEA R1, ARRAY              ; Load base address of ARRAY
-        LD R2, NUM_EIGHT           ; Load the number 8 (number of elements)
-        ADD R2, R2, #-1            ; Number of passes = n-1
-        AND R3, R3, #0             ; Clear R3 (outer loop counter)
+AND R5, R5, #0			;CLEAR R5
+ADD R5, R5, R4			;INITIALIZE R5 TO 8
 
 
-SORT_OUTER_LOOP
-        NOT R4, R2
-        ADD R4, R4, R3
-        BRzp SORT_DONE             ; Check if outer loop is done
-        LEA R1, ARRAY              ; Reload base address of ARRAY
-        LD R5, NUM_EIGHT           ; Load the number 8 (inner loop counter)
-        ADD R5, R5, #-1            ; Inner loop = n-1
+;load loop string&output to user
+LOOP
+LEA R0, NEWLINE					;\n for spacing
+PUTS						;output \n
+LEA R0, LOOPMSG					;LOAD STRING MSG THATLL LOOP x8
+PUTS						;OUTPUT STRING TO CONSOLE
 
-SORT_INNER_LOOP
-        ADD R6, R5, #0             ; Load inner loop counter
-        BRz INNER_DONE             ; Check if inner loop is done
-        LDR R7, R1, #0             ; Load current element
-        LDR R0, R1, #1             ; Load next element
-        NOT R7, R7
-        ADD R7, R7, R0
-        BRzp NO_SWAP               ; If current <= next, no swap
-        LDR R0, R1, #0             ; Reload current element
-        STR R0, R1, #1             ; Swap elements
-        STR R7, R1, #0
-NO_SWAP
-	ADD R1, R1, #1             ; Move to next element
-        ADD R5, R5, #-1            ; Decrement inner loop counter
-        BRnzp SORT_INNER_LOOP      ; Repeat inner loop
+;clear registers for initialization and maintenance 
+AND R0, R0, #0					;clear r0
+AND R2, R2, #0					;clear r2
 
-INNER_DONE
-        ADD R3, R3, #1             ; Increment outer loop counter
-        BRnzp SORT_OUTER_LOOP      ; Repeat outer loop
-SORT_DONE
-		RET
-		;This can go in sort_outer_loop to tell if no more passes 
-		;are available so it finshes this subroutine
+;user input
+GETC						;GET FIRST CHARACTER
+OUT						;ECHO FIRST CHRACTER
+ADD R0, R0, R1					;sub for ascii to integer convrt (TENS PLACE)
+ADD R2, R2, R0					;STORE IN R2 (R2 = TENS PLACE)
 
-;Subroutine: Display Numbers
-DISPLAY_NUMBERS
-	LEA R1, ARRAY              ; Load base address of ARRAY
-        LD R2, NUM_EIGHT           ; Load the number 8
-        AND R3, R3, #0             ; Clear R3 (counter)
+GETC						;GET SECOND CHARACTER
+OUT						;ECHO SECOND CHARACTER
+ADD R0, R0, R1					;CONVERT ASCII TO INTEGER (0NES PLACE)
+ADD R2, R2, R0					;STORE IN R2 (R2 = COMBINED NUMBER
 
-DISPLAY_LOOP
-        LDR R0, R1, #0             ; Load number from array
-        JSR PRINT_NUM              ; Print the number
-        LD R4, NEWLINE
-        ADD R0, R4, #0             ; Add newline after each number
-        OUT
-        ADD R1, R1, #1             ; Move to the next array element
-        ADD R3, R3, #1             ; Increment the counter
-        NOT R4, R2
-        ADD R4, R4, R3
-        BRnp DISPLAY_LOOP          ; Repeat until all numbers are printed
-        RET
-;Subroutine: Print number
-PRINT_NUM
-        AND R2, R2, #0             ; Clear R2
-        ADD R2, R0, #0             ; Copy number to R2
-        LD R3, ZERO_ASCII          ; Load ASCII '0'
+STR R2, R3, #0					;store combined # to array
+ADD R3, R3, #1					;move to nxt array location
+
+;loop decision to cont or not
+ADD R5, R5, #-1					;subtact from loop count (total x8)
+BRp LOOP					;if ++ is positive cont loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Bubble sort implementation
+LD R6, LPCOUNT		;Outer loop counter, R6 = 8
+OUTER_LOOP
+AND R7, R7, #0		;CLEAR INNER LOOP COUNTER, R7 = 0
+ADD R7, R7, R6		;INITIALIZE INNER LOOP COUNTER, R7 = R6
+
+LD R3, ARRAY		;LOAD ARRAY BASE ADDRESS INTO R3
+
+INNER_LOOP
+LDR R0, R3, #0		;LOAD ELEMENT AT R3 INTO R0
+LDR R1, R3, #1		;LOAD NEXT ELEMENT INTO R1
+
+;COMPARE AND SWAP IF NECESSARY
+NOT R2, R0		;R2 = -R0
+ADD R2, R2, R1		;R2 = R1 - R0
+BRzp SKIP_SWAP		;IF R1 >=R0, SKIP SWAP
+
+;SWAP ELEMENTS
+STR R1, R3, #0		;STORE R1 AT CURRENT POSITION
+STR R0, R3, #1		;STORE R0 AT NEXT POSITION
+
+SKIP_SWAP
+ADD R3, R3, #1		;MOVE TO NEXT ELEMENT
+ADD R7, R7, #-1		;DECREMENT INNER LOOP COUNTER
+BRp INNER_LOOP		;IF R7 > 0, CONTINUE INNER LOOP
+
+ADD R6, R6, #-1		;DECREMENT OUTER LOOP COUNTER
+BRp OUTER_LOOP		;IF R6 > 0, CONTINUE OUTER LOOP
+
+;DISPLAY SORTED ARRAY
+LEA R0, NEWSORT		;LOAD SORTED MESSAGE
+PUTS			;OUTPUT SORTED MESSAGE
+
+LEA R3, ARRAY		;LOAD ARRAY BASE ADDRESS INTO R3
+LD R6, LPCOUNT		;LOAD LOOP COUNT INTO R6
 
 PRINT_LOOP
-        ; Get the last digit by taking mod 10
-        AND R4, R2, #0             ; Clear R4
-        ADD R4, R2, #0             ; Copy number to R4
-        ADD R4, R4, #-10           ; Subtract 10
-        BRn STORE_DIGIT            ; If less than 10, store digit
+LDR R0, R3, #0		;LOAD ELEMENT INTO R0
+JSR PRINT_NUM		;PRINT THE NUMBER
+LEA R0, SPACE		;LOAD SPACE CHARACTER
+PUTS			;PRINT SPACE
 
-        ADD R4, R4, #10            ; Add back 10 to get the correct digit
-        AND R5, R5, #0             ; Clear R5
-        ADD R5, R5, #1             ; R5 = 1 (indicate there's another digit)
+ADD R3, R3, #1		;MOVE TO NEXT ELEMENT
+ADD R6, R6, #-1		;DECREMENT LOOP COUNTER
+BRp PRINT_LOOP		;IF R6 > 0, CONTINUE LOOP
 
-STORE_DIGIT
-        ADD R4, R4, R3             ; Convert to ASCII
-        STR R4, R6, #-1            ; Store digit in stack (R6)
-        ADD R6, R6, #-1            ; Decrement stack pointer
-        ADD R2, R2, #-10           ; Remove the last digit
-        BRnz PRINT_LOOP            ; Repeat if there are more digits
+;halt program
+HALT						
 
-;Data
-NUM_EIGHT    .FILL 8               ; Constant value 8
-ASCII_OFFSET .FILL xFFD0             ; ASCII to Integer conversion offset (-48)
-ZERO_ASCII   .FILL x0030	   ;ASCII for '0'
-MAX_VALUE    .FILL 100             ; Maximum value 100
+;SUBROUTINE TO PRINT NUMBER
+PRINT_NUM
+;SAVE REGISTERS THAT WILL BE USED
+ST R7, SAVE_R7
+ST R5, SAVE_R5
+ST R6, SAVE_R6
 
+AND R5, R5, #0		;CLEAR R5
+ADD R5, R5, R0		;COPY NUMBER TO R5
+
+LD R6, ASCII		;LOAD 48 (ASCII OFFSET FOR DIGITS
+
+;DIV_TEN
+AND R7, R7, #0		;CLEAR R7 (quotient)
+AND R1, R1, #10		;CLEAR R1
+ADD R1, R1, #10		;R1 = 10
+
+DIV_LOOP
+NOT R2, R1		;R2=-10
+ADD R2, R2, R5		;R2 = R5 - 10
+
+BRn END_DIV		;IF R2 < 0, END DIVISION
+ADD R5, R2, #0		;R5 = R2
+ADD R7, R7, #1		;INCREMENT QUOTIENT (TENS PLACE)
+BR DIV_LOOP
+
+END_DIV
+ADD R0, R7, R6		;CONVERT QUOTIENT TO ASCII
+OUT			;OUTPUT QUOTIENT
+ADD R0, R5, R6		;CONVERT REMAINDER TO ASCII
+OUT			;OUTPUT REMAINDER
+RET
+
+;RESTORE REGISTERS
+LD R7, SAVE_R7
+LD R5, SAVE_R5
+LD R6, SAVE_R6
+;data for console output;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+PROMPT1	.STRINGZ "Hello! Please enter 8 numbers between 0-100\n"
+PROMPT2	.STRINGZ "For single digits, enter zero in front. (example: 01 instead of 1)\n"
+LOOPMSG	.STRINGZ "Enter a number: "
+NEWLINE	.STRINGZ "\n"
+SPACE	.STRINGZ " " 
+NEWSORT	.STRINGZ "Ascending order: "	;save4later-will be used to display bubble sorted user inputs
+
+;data for fixed values;
+;;;;;;;;;;;;;;;;;;;;;;;
+ASCII 	.FILL #-48		;ascii conversion
+ASIOFF	.FILL xFFD0		;offset needed for # conversion
+LPCOUNT	.FILL #8		;loop initial value set to 8
+ARRAY 	.BLKW #8		;array data set in memory
+SAVE_R7        .BLKW #1       ; Storage for R7
+
+SAVE_R5        .BLKW #1       ; Storage for R5
+
+SAVE_R6        .BLKW #1       ; Storage for R6
 .END
